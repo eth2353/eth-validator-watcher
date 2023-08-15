@@ -224,7 +224,7 @@ class Beacon:
                 if validators_index is not None
                 else []
             ),
-            timeout=10,
+            timeout=60,
         )
 
         response.raise_for_status()
