@@ -25,6 +25,7 @@ from .models import (
 
 StatusEnum = Validators.DataItem.StatusEnum
 
+_LONG_TIMEOUT = 60
 
 class NoBlockError(Exception):
     pass
@@ -79,7 +80,7 @@ class Beacon:
 
     def get_genesis(self) -> Genesis:
         """Get genesis data."""
-        response = self.__get(f"{self.__url}/eth/v1/beacon/genesis", timeout=5)
+        response = self.__get(f"{self.__url}/eth/v1/beacon/genesis", timeout=_LONG_TIMEOUT)
         response.raise_for_status()
         genesis_dict = response.json()
         return Genesis(**genesis_dict)
@@ -92,7 +93,7 @@ class Beacon:
         """
         try:
             response = self.__get(
-                f"{self.__url}/eth/v2/beacon/blocks/{slot}", timeout=5
+                f"{self.__url}/eth/v2/beacon/blocks/{slot}", timeout=_LONG_TIMEOUT
             )
 
         except RetryError as e:
@@ -111,7 +112,7 @@ class Beacon:
         epoch: Epoch corresponding to the proposer duties to retrieve
         """
         response = self.__get(
-            f"{self.__url}/eth/v1/validator/duties/proposer/{epoch}", timeout=10
+            f"{self.__url}/eth/v1/validator/duties/proposer/{epoch}", timeout=_LONG_TIMEOUT
         )
 
         response.raise_for_status()
@@ -128,7 +129,7 @@ class Beacon:
         inner value             : Validator
         """
         response = self.__get(
-            f"{self.__url}/eth/v1/beacon/states/head/validators", timeout=25
+            f"{self.__url}/eth/v1/beacon/states/head/validators", timeout=_LONG_TIMEOUT
         )
 
         response.raise_for_status()
@@ -161,7 +162,7 @@ class Beacon:
         response = self.__get(
             f"{self.__url}/eth/v1/beacon/states/head/committees",
             params=dict(epoch=epoch),
-            timeout=10,
+            timeout=_LONG_TIMEOUT,
         )
 
         response.raise_for_status()
@@ -224,7 +225,7 @@ class Beacon:
                 if validators_index is not None
                 else []
             ),
-            timeout=60,
+            timeout=_LONG_TIMEOUT,
         )
 
         response.raise_for_status()
@@ -306,7 +307,7 @@ class Beacon:
             json=ValidatorsLivenessRequestLighthouse(
                 epoch=epoch, indices=sorted(list(validators_index))
             ).model_dump(),
-            timeout=10,
+            timeout=_LONG_TIMEOUT,
         )
 
     def __get_validators_liveness_old_teku(
@@ -326,7 +327,7 @@ class Beacon:
             json=ValidatorsLivenessRequestTeku(
                 indices=sorted(list(validators_index))
             ).model_dump(),
-            timeout=10,
+            timeout=_LONG_TIMEOUT,
         )
 
     def __get_validators_liveness_beacon_api(
@@ -347,5 +348,5 @@ class Beacon:
                 str(validator_index)
                 for validator_index in sorted(list(validators_index))
             ],
-            timeout=10,
+            timeout=_LONG_TIMEOUT,
         )
