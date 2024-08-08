@@ -39,10 +39,10 @@ class ProposerSchedule:
             duties = beacon.get_proposer_duties(epoch)
             for duty in duties.data:
                 self._head_schedule[duty.slot] = duty.validator_index
-        if (slot + self._spec.data.SLOTS_PER_EPOCH) not in self._head_schedule:
-            duties = beacon.get_proposer_duties(epoch + 1)
-            for duty in duties.data:
-                self._head_schedule[duty.slot] = duty.validator_index
+        #if (slot + self._spec.data.SLOTS_PER_EPOCH) not in self._head_schedule:
+        #    duties = beacon.get_proposer_duties(epoch + 1)
+        #    for duty in duties.data:
+        #        self._head_schedule[duty.slot] = duty.validator_index
 
         # Finalized slots.
         if not last_processed_finalized:
