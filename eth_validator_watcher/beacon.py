@@ -47,7 +47,7 @@ class Beacon:
         adapter_retry_not_found = HTTPAdapter(
             max_retries=Retry(
                 backoff_factor=0.5,
-                total=30,
+                total=5,
                 status_forcelist=[
                     codes.not_found,
                     codes.bad_gateway,
