@@ -6,6 +6,7 @@ from slack_sdk.errors import SlackApiError
 
 from eth_validator_watcher_ext import MetricsByLabel
 from .config import Config
+from .models import Spec
 from .utils import LABEL_SCOPE_WATCHED, SLOT_FOR_MISSED_ATTESTATIONS_PROCESS
 from .watched_validators import WatchedValidators
 
@@ -158,7 +159,7 @@ def log_multiple_entries(cfg: Config, validators: list[str], registry: WatchedVa
     slack_send(cfg, msg_slack)
 
 
-def log_details(cfg: Config, registry: WatchedValidators, metrics: MetricsByLabel, current_slot: int) -> None:
+def log_details(cfg: Config, registry: WatchedValidators, metrics: MetricsByLabel, current_slot: int, spec: Spec) -> None:
     """Log details about watched validators.
 
     Args:
@@ -178,21 +179,21 @@ def log_details(cfg: Config, registry: WatchedValidators, metrics: MetricsByLabe
     if not m:
         return None
 
-    for slot, validator in m.details_future_blocks:
-        # Only log once per epoch future block proposals.
-        if current_slot % 32 == 0 and slot >= current_slot + 32:
-            log_single_entry(cfg, validator, registry, 'will propose a block', '🙏', slot, COLOR_GREEN)
+    for slot, validator in sorted(m.details_proposed_blocks, key=lambda x: x[0]):
+        log_single_entry(cfg, validator, registry, f'proposed a block during slot {slot}', '🏅', slot, COLOR_BOLD_GREEN)
 
-    for slot, validator in m.details_proposed_blocks:
-        log_single_entry(cfg, validator, registry, 'proposed a block', '🏅', slot, COLOR_BOLD_GREEN)
+    for slot, validator in sorted(m.details_missed_blocks, key=lambda x: x[0]):
+        log_single_entry(cfg, validator, registry, f'likely missed a block during slot {slot}', '😩', slot, COLOR_RED)
 
-    for slot, validator in m.details_missed_blocks:
-        log_single_entry(cfg, validator, registry, 'likely missed a block', '😩', slot, COLOR_RED)
-
-    for slot, validator in m.details_missed_blocks_finalized:
-        log_single_entry(cfg, validator, registry, 'missed a block for real', '😭', slot, COLOR_BOLD_RED)
+    for slot, validator in sorted(m.details_missed_blocks_finalized, key=lambda x: x[0]):
+        log_single_entry(cfg, validator, registry, f'missed a block for real during slot {slot}', '😭', slot, COLOR_BOLD_RED)
 
     if m.details_missed_attestations:
+        # Only log once per epoch missed attestations
+        if current_slot % spec.data.SLOTS_PER_EPOCH == SLOT_FOR_MISSED_ATTESTATIONS_PROCESS:
+            log_multiple_entries(cfg, m.details_missed_attestations, registry, f'missed an attestation', '😞', COLOR_YELLOW)
+
+    for slot, validator in sorted(m.details_future_blocks, key=lambda x: x[0]):
         # Only log once per epoch future block proposals.
-        if current_slot % 32 == SLOT_FOR_MISSED_ATTESTATIONS_PROCESS:
-            log_multiple_entries(cfg, m.details_missed_attestations, registry, 'missed an attestation', '😞', COLOR_YELLOW)
+        if current_slot % spec.data.SLOTS_PER_EPOCH == 0 and slot >= current_slot + spec.data.SLOTS_PER_EPOCH:
+            log_single_entry(cfg, validator, registry, f'will propose a block during slot {slot}', '🙏', slot, COLOR_GREEN)

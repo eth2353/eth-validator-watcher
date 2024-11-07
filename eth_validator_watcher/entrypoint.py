@@ -127,7 +127,7 @@ class ValidatorWatcher:
 
         metrics = compute_validator_metrics(watched_validators.get_validators(), slot)
 
-        log_details(self._cfg, watched_validators, metrics, slot)
+        log_details(self._cfg, watched_validators, metrics, slot, self._spec)
 
         for label, m in metrics.items():
             for status in Validators.DataItem.StatusEnum:
